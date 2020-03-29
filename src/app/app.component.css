@@ -1,0 +1,4 @@
+.flashes {
+    display: flex;
+    flex-wrap: wrap;
+}
