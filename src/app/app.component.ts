@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, Input } from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { IFlash } from './flash.model';
 
 @Component({
@@ -7,6 +8,7 @@ import { IFlash } from './flash.model';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  @ViewChild('flashForm', { static: true }) flashForm: NgForm;
   flashes: IFlash[] = [{
     question: 'Question 1',
     answer: 'Answer 1',
@@ -24,7 +26,14 @@ export class AppComponent {
     id: getRandomNumber(),
   }];
 
-  private editing = false;
+  flash: IFlash = {
+    id: -1,
+    question: '',
+    answer: '',
+    show: false,
+  }
+
+  editing = false;
   private editingId: number;
 
   // Used to keep the list efficient in ngFor loop
@@ -45,13 +54,45 @@ export class AppComponent {
   handleEdit(id: number) {
     this.editing = true;
     this.editingId = id;
-    // TODO: Add editing logic after adding the form
+    const flash = this.flashes.find(flash => flash.id === id);
+    // this.flash = flash;  // this causes some kind of call-by-reference
+    this.flash.answer = flash.answer;
+    this.flash.question = flash.question;
+  }
+
+  handleUpdate() {
+    const flash = this.flashes.find(flash => flash.id === this.editingId);
+    flash.question = this.flash.question;
+    flash.answer = this.flash.answer;
+    this.handleCancel();
+  }
+
+  handleCancel() {
+    this.editing = false;
+    this.editingId = undefined;
+    this.handleClear();
   }
 
   handleRememberedChange({id, flag}) {
     const flash = this.flashes.find(flash => flash.id === id);
     flash.remembered = flag;
     console.log("flag", flash);
+  }
+
+  handleSubmit() {
+    this.flash.id = getRandomNumber();
+    this.flashes.push(this.flash);
+    this.handleClear();
+  }
+
+  handleClear() {
+    this.flash = {
+      id:  -1,
+      question: '',
+      answer: '',
+      show: false,
+    };
+    this.flashForm.reset();
   }
 }
 
