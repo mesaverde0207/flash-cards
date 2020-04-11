@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { IFlash } from './flash.model';
+import { BehaviorSubject } from 'rxjs';
 
 function getRandomNumber() {
   return Math.floor(Math.random() * 10000);
@@ -26,38 +27,71 @@ export class FlashService {
     id: getRandomNumber(),
   }];
 
+  flashes$ = new BehaviorSubject<IFlash[]>(this.flashes);
+
   trackByFlashId(index: number, flash: IFlash) {
     return flash.id;
   }
 
   addFlash(flash: IFlash) {
-    this.flashes.push({
-      ...flash,
-      show: false,
-      id: getRandomNumber(),
-    });
+    this.flashes = [
+      ...this.flashes, {
+        ...flash,
+        show: false,
+        id: getRandomNumber(),
+      }
+    ];
+    this.flashes$.next(this.flashes);
   }
 
   toggleFlash(id: number) {
-    const flash = this.flashes.find(flash => flash.id === id);
-    flash.show = !flash.show;
+    const index = this.flashes.findIndex(flash => flash.id === id);
+    this.flashes = [
+      ...this.flashes.slice(0, index),
+      {
+        ...this.flashes[index],
+        show: !this.flashes[index].show
+      },
+      ...this.flashes.slice(index+1)
+    ];
+    this.flashes$.next(this.flashes);
   }
 
   deleteFlash(id: number) {
     const flashId = this.flashes.findIndex(flash => flash.id === id);
-    this.flashes.splice(flashId, 1);
+    this.flashes = [
+      ...this.flashes.slice(0, flashId),
+      ...this.flashes.slice(flashId+1)
+    ];
+    this.flashes$.next(this.flashes);
   }
 
   updateFlash(id: number, updatedFlash: IFlash) {
-    const flash = this.flashes.find(flash => flash.id === id);
-    flash.question = updatedFlash.question;
-    flash.answer = updatedFlash.answer;
+    const index = this.flashes.findIndex(flash => flash.id === id);
+    this.flashes = [
+      ...this.flashes.slice(0, index),
+      {
+        ...this.flashes[index],
+        question: updatedFlash.question,
+        answer: updatedFlash.answer,
+      },
+      ...this.flashes.slice(index+1)
+    ];
+    console.log("update: ", this.flashes);
+    this.flashes$.next(this.flashes);
   }
 
   rememberedChange(id: number, flag: "correct" | "incorrect") {
-    const flash = this.flashes.find(flash => flash.id === id);
-    flash.remembered = flag;
-    console.log("flag", flash);
+    const index = this.flashes.findIndex(flash => flash.id === id);
+    this.flashes = [
+      ...this.flashes.slice(0, index),
+      {
+        ...this.flashes[index],
+        remembered: flag
+      },
+      ...this.flashes.slice(index+1)
+    ];
+    this.flashes$.next(this.flashes);
   }
 
   getFlash(id: number): IFlash {

@@ -30,7 +30,7 @@
 
 <div class="flashes">
   <app-flash
-    *ngFor="let flash of flashes; trackBy: trackByFlashId"
+    *ngFor="let flash of flashes$ | async; trackBy: trackByFlashId"
     [flash]="flash"
     (onToggleCard)="handleToggleCard($event)"
     (onDelete)="handleDelete($event)"
