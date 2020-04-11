@@ -1,6 +1,7 @@
 import { Component, ViewChild, Input } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { IFlash } from './flash.model';
+import { FlashService } from './flash.service';
 
 @Component({
   selector: 'app-root',
@@ -9,32 +10,19 @@ import { IFlash } from './flash.model';
 })
 export class AppComponent {
   @ViewChild('flashForm', { static: true }) flashForm: NgForm;
-  flashes: IFlash[] = [{
-    question: 'Question 1',
-    answer: 'Answer 1',
-    show: false,
-    id: getRandomNumber(),
-  }, {
-    question: 'Question 2',
-    answer: 'Answer 2',
-    show: false,
-    id: getRandomNumber(),
-  }, {
-    question: 'Question 3',
-    answer: 'Answer 3',
-    show: false,
-    id: getRandomNumber(),
-  }];
-
   flash: IFlash = {
     id: -1,
     question: '',
     answer: '',
     show: false,
   }
-
+  flashes: IFlash[];  // this needed?
   editing = false;
   private editingId: number;
+
+  constructor(private flashService: FlashService) {
+    this.flashes = this.flashService.flashes;  // call-by-reference?
+  }
 
   // Used to keep the list efficient in ngFor loop
   trackByFlashId(index: number, flash: IFlash) {
@@ -42,28 +30,23 @@ export class AppComponent {
   }
 
   handleToggleCard(id: number) {
-    const flash = this.flashes.find(flash => flash.id === id);
-    flash.show = !flash.show;
+    this.flashService.toggleFlash(id);
   }
 
   handleDelete(id: number) {
-    const flashId = this.flashes.findIndex(flash => flash.id === id);
-    this.flashes.splice(flashId, 1);
+    this.flashService.deleteFlash(id);
   }
 
   handleEdit(id: number) {
+    let editingFlash = this.flashService.getFlash(id);
+    this.flash.answer = editingFlash.answer;
+    this.flash.question = editingFlash.question;
     this.editing = true;
     this.editingId = id;
-    const flash = this.flashes.find(flash => flash.id === id);
-    // this.flash = flash;  // this causes some kind of call-by-reference
-    this.flash.answer = flash.answer;
-    this.flash.question = flash.question;
   }
 
   handleUpdate() {
-    const flash = this.flashes.find(flash => flash.id === this.editingId);
-    flash.question = this.flash.question;
-    flash.answer = this.flash.answer;
+    this.flashService.updateFlash(this.editingId, this.flash);
     this.handleCancel();
   }
 
@@ -74,14 +57,11 @@ export class AppComponent {
   }
 
   handleRememberedChange({id, flag}) {
-    const flash = this.flashes.find(flash => flash.id === id);
-    flash.remembered = flag;
-    console.log("flag", flash);
+    this.flashService.rememberedChange(id, flag);
   }
 
   handleSubmit() {
-    this.flash.id = getRandomNumber();
-    this.flashes.push(this.flash);
+    this.flashService.addFlash(this.flash);
     this.handleClear();
   }
 
@@ -94,8 +74,4 @@ export class AppComponent {
     };
     this.flashForm.reset();
   }
-}
-
-function getRandomNumber() {
-  return Math.floor(Math.random() * 10000);
 }
