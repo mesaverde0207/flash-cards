@@ -1,14 +1,16 @@
-import { Component, ViewChild, Input } from '@angular/core';
+import { Component, ViewChild, Input, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { IFlash } from './flash.model';
 import { FlashService } from './flash.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   @ViewChild('flashForm', { static: true }) flashForm: NgForm;
   flash: IFlash = {
     id: -1,
@@ -16,12 +18,14 @@ export class AppComponent {
     answer: '',
     show: false,
   }
-  flashes: IFlash[];  // this needed?
+  flashes$: Observable<IFlash[]>;
   editing = false;
   private editingId: number;
 
-  constructor(private flashService: FlashService) {
-    this.flashes = this.flashService.flashes;  // call-by-reference?
+  constructor(private flashService: FlashService) { }
+
+  ngOnInit() {
+    this.flashes$ = this.flashService.flashes$;
   }
 
   // Used to keep the list efficient in ngFor loop
